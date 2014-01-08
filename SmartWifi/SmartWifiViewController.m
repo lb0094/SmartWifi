@@ -10,7 +10,7 @@
 #import "RouterInfo.h"
 
 #import "SmartWifiXMPPIndexPageViewController.h"
-
+#import "NSData+Base64Additions.h"
 @interface SmartWifiViewController (){
     float usedFlow;
     float totalFlow;
@@ -38,6 +38,7 @@
 {
     
     [super viewDidLoad];
+    [self setEmailDefaults];
     //创建UIScrollView
         CGRect bounds = self.view.frame;
     helpScrView = [[UIScrollView alloc] initWithFrame:CGRectMake(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height)];  //创建UIScrollView，位置大小与主界面一样。
@@ -242,6 +243,63 @@
     [helpScrView addSubview:update4];
     [helpScrView addSubview:update5];
     [helpScrView addSubview:update6];
+
+    //reboot router
+    reboot1 = [[UILabel alloc]initWithFrame:CGRectMake(bounds.size.width+20, 266, 150, 30)];
+    reboot1.backgroundColor = [UIColor clearColor];
+    reboot1.text = @"Reboot router";
+    reboot1.font = [UIFont systemFontOfSize:20.0];
+    reboot1.textColor =[UIColor whiteColor];
+    reboot1.textAlignment = NSTextAlignmentLeft;
+    
+    reboot2 = [[UILabel alloc]initWithFrame:CGRectMake(bounds.size.width+20, 291, 220, 42)];
+    reboot2.backgroundColor = [UIColor clearColor];
+    reboot2.text = @"Rebooting the router will disrupt active traffic on the network.";
+    reboot2.font = [UIFont systemFontOfSize:13.0];
+    reboot2.textColor =[UIColor whiteColor];
+    reboot2.textAlignment = NSTextAlignmentLeft;
+    reboot2.numberOfLines = 2;
+    
+    reboot3 = [[UIButton alloc]initWithFrame:CGRectMake(bounds.size.width+250, 283, 50, 50)];
+    [reboot3 setImage:[UIImage imageNamed:@"smartwifi_reboot_router_nor_icon.png" ] forState:UIControlStateNormal];
+    [reboot3 setImage:[UIImage imageNamed:@"smartwifi_reboot_router_press_icon.png" ] forState:UIControlStateHighlighted];
+    [reboot3 addTarget:self action:@selector(rebootRouter:) forControlEvents:UIControlEventTouchUpInside];
+    
+    
+    [helpScrView addSubview:reboot1];
+    [helpScrView addSubview:reboot2];
+    [helpScrView addSubview:reboot3];
+    
+    //support
+    support1 = [[UILabel alloc]initWithFrame:CGRectMake(bounds.size.width+20, 344, 120, 30)];
+    support1.backgroundColor = [UIColor clearColor];
+    support1.text = @"Support";
+    support1.font = [UIFont systemFontOfSize:20.0];
+    support1.textColor =[UIColor whiteColor];
+    support1.textAlignment = NSTextAlignmentLeft;
+    
+    support2 = [[UILabel alloc]initWithFrame:CGRectMake(bounds.size.width+20, 369, 150, 21)];
+    support2.backgroundColor = [UIColor clearColor];
+    support2.text = @"What can I help you?";
+    support2.font = [UIFont systemFontOfSize:13.0];
+    support2.textColor =[UIColor whiteColor];
+    support2.textAlignment = NSTextAlignmentLeft;
+    
+    support3 = [[UIButton alloc]initWithFrame:CGRectMake(bounds.size.width+170, 350, 50, 50)];
+    [support3 setImage:[UIImage imageNamed:@"smartwifi_chat_nor.png" ] forState:UIControlStateNormal];
+    [support3 setImage:[UIImage imageNamed:@"smartwifi_chat_press.png" ] forState:UIControlStateHighlighted];
+    [support3 addTarget:self action:@selector(talkToMe:) forControlEvents:UIControlEventTouchUpInside];
+    
+    support4 = [[UIButton alloc]initWithFrame:CGRectMake(bounds.size.width+250, 350, 50, 50)];
+    [support4 setImage:[UIImage imageNamed:@"smartwifi_email_icon_nor.png" ] forState:UIControlStateNormal];
+    [support4 setImage:[UIImage imageNamed:@"smartwifi_email_icon_press.png" ] forState:UIControlStateHighlighted];
+    [support4 addTarget:self action:@selector(emailToMe:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [helpScrView addSubview:support1];
+    [helpScrView addSubview:support2];
+    [helpScrView addSubview:support3];
+    [helpScrView addSubview:support4];
+
     
     monitorBigitSender = [[MonitorBigitSender alloc]init];
     [monitorBigitSender doSendSoapMsg];
@@ -1098,5 +1156,196 @@
     NSLog(@"手动更新事件");
 
 }
+-(void)rebootRouter:(id)sender{
+    //reboot
+    NSLog(@"手动重启路由");
+    
+}
+-(void)talkToMe:(id)sender{
+    NSLog(@"聊天把、吧");
+    
+}
+-(void)emailToMe:(id)sender{
+    NSLog(@"发邮件吧");
+    if (!sendEmailView)
+    {
+        sendEmailView = [[UIAlertView alloc] initWithTitle:@"Send Email:" message:@"\n\n\n" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Send", nil];
+        sendEmailView.backgroundColor = [UIColor blackColor];
+        sendEmailView.delegate = self;
+        
+        subjectField = [[UITextField alloc] initWithFrame:CGRectMake(12.0, 50.0, 260.0, 25.0)];
+        subjectField.delegate = self;
+        subjectField.placeholder = @"Subject";
+        //        usernameField.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        //        usernameField.autocorrectionType = UITextAutocorrectionTypeNo;
+        //        usernameField.returnKeyType = UIReturnKeyNext;
+        //        usernameField.keyboardType = UIKeyboardTypeEmailAddress;
+        subjectField.returnKeyType = UIReturnKeyGo;
+        [subjectField setBackgroundColor:[UIColor whiteColor]];
+        [sendEmailView addSubview:subjectField];
+        
+        macAddrField = [[UITextField alloc] initWithFrame:CGRectMake(12.0, 85.0, 260.0, 25.0)];
+        macAddrField.placeholder = @"Mac address:12345678";
+        [macAddrField setBackgroundColor:[UIColor whiteColor]];
+        [macAddrField setEnabled:NO];
+        [sendEmailView addSubview:macAddrField];
+        
+        questionField = [[UITextField alloc] initWithFrame:CGRectMake(12.0, 120.0, 260.0, 50.0)];
+        questionField.delegate = self;
+        questionField.placeholder = @"Your question";
+        //        passwordField.secureTextEntry = YES;
+        questionField.returnKeyType = UIReturnKeyGo;
+        [questionField setBackgroundColor:[UIColor whiteColor]];
+        [sendEmailView addSubview:questionField];
+        
+        yourEmailField = [[UITextField alloc] initWithFrame:CGRectMake(12.0, 180.0, 260.0, 25.0)];
+        yourEmailField.placeholder = @"Your email";
+        yourEmailField.delegate = self;
+        yourEmailField.keyboardType = UIKeyboardTypeEmailAddress;
+        yourEmailField.returnKeyType = UIReturnKeyGo;
+        [yourEmailField setBackgroundColor:[UIColor whiteColor]];
+        [sendEmailView addSubview:yourEmailField];
+        
+        noteLabel = [[UILabel alloc] initWithFrame:CGRectMake(12.0, 210.0, 260.0, 75.0)];
+        noteLabel.numberOfLines = 3;
+        noteLabel.textColor = [UIColor redColor];
+        noteLabel.text = @"The Applicant undertakes that the information provided there with above is true and valid.";
+        [noteLabel setBackgroundColor:[UIColor clearColor]];
+        [sendEmailView addSubview:noteLabel];
+        
+        
+        CGAffineTransform myTransform = CGAffineTransformMakeTranslation(0.0, 00.0);
+        [sendEmailView setTransform:myTransform];
+    }else {
+        //        sendEmailView.title = title;
+        //        usernameField.text = nil;
+        //        passwordField.text = nil;
+    }
+    
+    //    [subjectField becomeFirstResponder];
+    [sendEmailView show];
+    //    [self sendMessage];
+    
+}
+#pragma mark - 在应用内发送邮件
 
+- (void)sendMessage:(NSString *)message {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    SKPSMTPMessage *testMsg = [[SKPSMTPMessage alloc] init];
+    testMsg.fromEmail = [defaults objectForKey:@"fromEmail"];
+    
+    testMsg.toEmail = [defaults objectForKey:@"toEmail"];
+    testMsg.bccEmail = [defaults objectForKey:@"bccEmal"];
+    testMsg.relayHost = [defaults objectForKey:@"relayHost"];
+    
+    testMsg.requiresAuth = [[defaults objectForKey:@"requiresAuth"] boolValue];
+    
+    if (testMsg.requiresAuth) {
+        testMsg.login = [defaults objectForKey:@"login"];
+        
+        testMsg.pass = [defaults objectForKey:@"pass"];
+        
+    }
+    
+    testMsg.wantsSecure = [[defaults objectForKey:@"wantsSecure"] boolValue]; // smtp.gmail.com doesn't work without TLS!
+    
+    testMsg.subject = @"SMTPMessage Test Message";
+    
+    
+    //testMsg.bccEmail = @"testbcc@test.com";
+    
+    // Only do this for self-signed certs!
+    // testMsg.validateSSLChain = NO;
+    testMsg.delegate = self;
+    
+    NSDictionary *plainPart = [NSDictionary dictionaryWithObjectsAndKeys:@"text/plain",kSKPSMTPPartContentTypeKey,
+                               message,kSKPSMTPPartMessageKey,@"8bit",kSKPSMTPPartContentTransferEncodingKey,nil];
+    
+    //    NSString *vcfPath = [[NSBundle mainBundle] pathForResource:@"test" ofType:@"vcf"];
+    //    NSData *vcfData = [NSData dataWithContentsOfFile:vcfPath];
+    //
+    //    NSDictionary *vcfPart = [NSDictionary dictionaryWithObjectsAndKeys:@"text/directory;\r\n\tx-unix-mode=0644;\r\n\tname=\"test.vcf\"",kSKPSMTPPartContentTypeKey,
+    //                             @"attachment;\r\n\tfilename=\"test.vcf\"",kSKPSMTPPartContentDispositionKey,[vcfData encodeBase64ForData],kSKPSMTPPartMessageKey,@"base64",kSKPSMTPPartContentTransferEncodingKey,nil];
+    //
+    testMsg.parts = [NSArray arrayWithObjects:plainPart,nil,nil];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [testMsg send];
+    });
+}
+- (void)messageSent:(SKPSMTPMessage *)message
+{
+    //    [message release];
+    //    self.textView.text  = @"Yay! Message was sent!";
+    NSLog(@"delegate - message sent");
+}
+
+- (void)messageFailed:(SKPSMTPMessage *)message error:(NSError *)error
+{
+    
+    //self.textView.text = [NSString stringWithFormat:@"Darn! Error: %@, %@", [error code], [error localizedDescription]];
+    //    self.textView.text = [NSString stringWithFormat:@"Darn! Error!\n%i: %@\n%@", [error code], [error localizedDescription], [error localizedRecoverySuggestion]];
+    //    [message release];
+    
+    NSLog(@"delegate - error(%d): %@", [error code], [error localizedDescription]);
+}
+-(void)setEmailDefaults{
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSMutableDictionary *defaultsDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"liubo0094@gmail.com", @"fromEmail",
+                                               @"liubo0094@gmail.com", @"toEmail",
+                                               @"smtp.gmail.com", @"relayHost",
+                                               @"liubo0094@gmail.com", @"login",
+                                               @"lb19901010", @"pass",
+                                               [NSNumber numberWithBool:YES], @"requiresAuth",
+                                               [NSNumber numberWithBool:YES], @"wantsSecure", nil];
+    
+    [userDefaults registerDefaults:defaultsDictionary];
+    
+}
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [textField resignFirstResponder];
+    return YES;
+}
+-(void) willPresentAlertView:(UIAlertView *)alertView
+{
+    CGRect frame = alertView.frame;
+    frame.origin.y -= 450;
+    frame.size.height += 180;
+    alertView.frame = frame;
+    
+    UIButton * cancelButton = (UIButton *)[alertView viewWithTag:1];
+    [cancelButton setFrame:CGRectMake(20, sendEmailView.bounds.size.height - 60, 70, 40)];
+    //CGRectMake(cancelButton.frame.origin.x, 100, cancelButton.frame.size.width, cancelButton.frame.size.height);
+    UIButton * oneButton = (UIButton *)[alertView viewWithTag:2];
+    [oneButton setFrame:CGRectMake(sendEmailView.bounds.size.width-90, sendEmailView.bounds.size.height - 60, 70, 40)];
+    
+    for( UIView * view in sendEmailView.subviews )
+    {
+        if( ![view isKindOfClass:[UILabel class]] )
+        {
+            CGRect btnFrame = sendEmailView.frame;
+            btnFrame.origin.y += 70;
+            sendEmailView.frame = btnFrame;
+        }
+    }
+    
+}
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex{
+    if (buttonIndex == 1) {
+        NSLog(@"lallalalalal");
+        if([self checkEmailMessage]){
+            //显示Alert
+            NSString *message =[@"Subject:" stringByAppendingString:subjectField.text];
+            //            NSString *message = [[[[[[[@"Subject:" stringByAppendingString:subjectField.text]stringByAppendingString:@";"]stringByAppendingString:macAddrField.text]stringByAppendingString:@";"]stringByAppendingString:questionField.text]stringByAppendingString:@";"]stringByAppendingString:yourEmailField.text];
+            [self sendMessage:message];
+        }else{
+            //提醒格式不对
+        }
+    }
+}
+//验证邮件格式
+-(BOOL)checkEmailMessage{
+    return YES;
+}
 @end

@@ -18,10 +18,11 @@
 #import "SoapSetURLSender.h"
 #import "MonitorBigitSender.h"
 #import "SoapGetUsernameSender.h"
+#import "SKPSMTPMessage.h"
 @protocol BDelegate<NSObject>
 - (void)changeLabelText: (NSString *)text;
 @end
-@interface SmartWifiViewController : UIViewController<UIApplicationDelegate,UIScrollViewDelegate>{
+@interface SmartWifiViewController : UIViewController<UIApplicationDelegate,UIScrollViewDelegate,SKPSMTPMessageDelegate,UITextFieldDelegate>{
     SoapGetVPNTypeSender *getVPNTypeSender;
     SoapGetVPNInfoSender *getVPNInfoSender;
     SoapGetUsedReqSender *getUsedReqSender;
@@ -36,7 +37,13 @@
     UINavigationBar *titleBar;
     UIPageControl* pageCtrl;
     UIScrollView* helpScrView;
-
+    UIAlertView* sendEmailView;
+    UITextField* subjectField;
+    UITextField* macAddrField;
+    UITextField* questionField;
+    UITextField* yourEmailField;
+    UILabel* noteLabel;
+    
     //firstView
     UIImageView *ringImage;
     UILabel *displayConnection;
@@ -76,6 +83,15 @@
     UILabel *update4;
     UILabel *update5;
     UIButton *update6;
+    
+    UILabel *reboot1;
+    UILabel *reboot2;
+    UIButton *reboot3;
+    
+    UILabel *support1;
+    UILabel *support2;
+    UIButton *support3;
+    UIButton *support4;
 }
 @property (strong, nonatomic) NSTimer *timer;
 @property (strong, nonatomic) NSTimer *timer2;
